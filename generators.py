@@ -1,7 +1,7 @@
 
 import numpy as np
 
-def noise(amp:np.ndarray, duration=1.0, sr=44100):
+def noise(amp:np.ndarray=[1.0], duration=1.0, sr=44100):
     """
     Generate white noise.
 
