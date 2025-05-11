@@ -65,13 +65,25 @@ def smoothing(arr:np.ndarray, window_size:int=5):
     smoothed_arr = np.convolve(padded_arr, np.ones(window_size)/window_size, mode='valid')
     return smoothed_arr
 
+def plot_with_derivatives(x, dx, ddx, title='Plot', label='label'):
+    plt.figure(figsize=(10, 6))
+    plt.subplot(3, 1, 1)
+    plt.plot(norm(x), label=title)
+    plt.legend()
+    plt.subplot(3, 1, 2)
+    plt.plot(norm(dx), label="first derivative")
+    plt.legend()
+    plt.subplot(3, 1, 3)
+    plt.plot(norm(ddx), label='Second Derivative')
+    plt.legend()
+    plt.suptitle(title)
+    plt.tight_layout()
+    plt.show()
 
-
-def plot_heatmap(snd, x_label='Time Frame', y_label='Dimension', title='Latent space Heatmap'):
-    plt.figure(figsize=(5, 3))
-    sns.heatmap(snd.cpu().numpy()[0,:,:], cmap='viridis')
-    plt.xlabel('Time Frame')
-    plt.ylabel('Dimension')
+def plot_heatmap(arr, title='Heatmap'):
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(arr, cmap='viridis')
+    ax.invert_yaxis()
     plt.title(title)
     plt.tight_layout()
     plt.show()
