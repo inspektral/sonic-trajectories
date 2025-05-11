@@ -166,6 +166,21 @@ def filter_audio(audio:np.ndarray, cutoff_cv:np.ndarray, highpass=False, sr=4410
 
     return output
 
+def soft_clip(x:np.ndarray, gain:np.ndarray) -> np.ndarray:
+    """
+    Apply soft clipping to an audio signal.
+
+    Parameters:
+        x (np.ndarray): Input audio signal (1D)
+        gain (np.ndarray): Gain control signal (1D)
+
+    Returns:
+        np.ndarray: Soft-clipped audio
+    """
+    gain = stretch_array(gain, len(x))
+
+    return np.tanh(x * gain) / np.tanh(gain)
+
 # UTILS
 
 def stretch_array(arr:np.ndarray, target_length:int):
