@@ -19,8 +19,18 @@ def spectrogram(audio, sr=44100, title='Spectrogram'):
     plt.title(title)
     plt.show()
 
-def distances(repr:np.ndarray):
-    distances = np.sqrt(np.sum(np.power(repr[:, 1:] - repr[:, :-1], 2), axis=0))
+def distances(repr:np.ndarray, top_n:int=0):
+    distances = np.power(repr[:, 1:] - repr[:, :-1], 2)
+    print(f"distances shape: {distances.shape}")
+
+    if top_n > 0:
+        spans = np.max(distances, axis=1) - np.min(distances, axis=1)
+        max_indices = np.argsort(spans)[-top_n:]
+        print(f"max_indices: {max_indices}")
+        distances = distances[max_indices, :]
+    
+    distances = np.sum(distances, axis=0)
+    distances = np.sqrt(distances)
     return distances
 
 def cosine_similarity(repr: np.ndarray) -> np.ndarray:

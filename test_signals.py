@@ -31,6 +31,7 @@ def random_sines(ratio:float=0.5):
 
     random_sines = random_sines*ratio + sine
     random_sines = utils.norm(random_sines)
+
     return random_sines
 
 def saw_noise(ratio=0.5):
