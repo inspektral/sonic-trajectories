@@ -1,0 +1,5 @@
+numpy
+librosa
+matplotlib
+seaborn
+music2latent
