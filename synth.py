@@ -182,7 +182,7 @@ def soft_clip(x:np.ndarray, gain:np.ndarray) -> np.ndarray:
     return np.tanh(x * gain) / np.tanh(gain)
 
 
-def reverb(audio, decay):
+def reverb(audio, wet:np.ndarray=[1], decay= 1.5):
     """
     Apply reverb to an audio signal.
 
@@ -192,14 +192,19 @@ def reverb(audio, decay):
     Returns:
         np.ndarray: Reverberated audio
     """
+    wet = stretch_array(wet, len(audio))
+
     ir = noise(np.logspace(1,0,300)/10, decay)
     ir = filter(ir, 2000)
     x = np.convolve(audio, ir, mode='full')
     x = x[:len(audio)]
 
+    x = x * wet
+    x = x + audio * (1 - wet)
+
     return x
 
-def delay(audio, delay_time, feedback=0.5):
+def delay(audio, wet:np.ndarray=[1], delay_time=0.1, feedback=0.7):
     """
     Apply delay to an audio signal.
 
@@ -210,6 +215,8 @@ def delay(audio, delay_time, feedback=0.5):
     Returns:
         np.ndarray: Delayed audio
     """
+    wet = stretch_array(wet, len(audio))
+
     delay_samples = int(delay_time * 44100)
     delayed_audio = np.zeros_like(audio)
     feedback_buffer = np.zeros(delay_samples)
@@ -217,6 +224,10 @@ def delay(audio, delay_time, feedback=0.5):
     for i in range(len(audio)):
         delayed_audio[i] = audio[i] + feedback_buffer[i % delay_samples]
         feedback_buffer[i % delay_samples] = audio[i] + feedback * delayed_audio[i]
+
+    delayed_audio = delayed_audio[:len(audio)]
+    delayed_audio = delayed_audio * wet
+    delayed_audio = delayed_audio + audio * (1 - wet)
 
     return delayed_audio
 
