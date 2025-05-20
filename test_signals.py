@@ -73,5 +73,10 @@ def sines_noise(ratio=0.5):
     return sines
 
 def filter_saw():
+    saw = synth.sawtooth_wave([1], [100], duration=10)
+    modulator = synth.sine_wave([1], [0.5], duration=10)*300+1000
+
+    audio = synth.HLPfilter(saw, modulator)
+    return audio
 
 

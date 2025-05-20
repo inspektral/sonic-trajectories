@@ -134,7 +134,7 @@ def adsr(attack:float, decay:float, sustain:float, release:float, exp:float=1.0,
     
     return envelope
 
-def filter_audio(audio:np.ndarray, cutoff_cv:np.ndarray, highpass=False, sr=44100) -> np.ndarray:
+def HLPfilter(audio:np.ndarray, cutoff_cv:np.ndarray, highpass=False, sr=44100) -> np.ndarray:
     """
     Filter audio using a 12 dB/oct (first-order) IIR filter with a modulated cutoff.
 
@@ -195,7 +195,7 @@ def reverb(audio, wet:np.ndarray=[1], decay= 1.5):
     wet = stretch_array(wet, len(audio))
 
     ir = noise(np.logspace(1,0,300)/10, decay)
-    ir = filter(ir, 2000)
+    ir = HLPfilter(ir, 2000)
     x = np.convolve(audio, ir, mode='full')
     x = x[:len(audio)]
 
