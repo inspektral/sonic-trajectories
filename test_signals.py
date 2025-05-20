@@ -55,9 +55,22 @@ def saw_noise(ratio=0.5):
         >>> signal = saw_noise(ratio=0.7)  # 70% sawtooth, 30% noise
     """
 
-    adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 20)
+    adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
     saw = synth.sawtooth_wave(np.tile(adsr, 4), [50], duration=10)
 
     noise = synth.noise(duration=10)
 
     return saw+noise*ratio
+
+def sines_noise(ratio=0.5):
+    adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
+    sines = synth.sine_wave(np.tile(adsr, 4), [np.random.randint(100, 5000)], duration=10)
+    for i in range(10):
+        sines = sines + synth.sine_wave(np.tile(adsr, 4), [np.random.randint(100, 5000)], duration=10)
+    noise = synth.noise(duration=10)
+    sines = sines+noise*ratio
+    sines = utils.norm(sines)
+    return sines
+
+
+
