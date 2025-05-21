@@ -76,14 +76,23 @@ def sines_noise(ratio=0.5):
     audio = synth.norm(audio)
     return audio, modulator
 
-def filter_saw():
+def filter_saw(amount=0.5):
     saw = synth.sawtooth_wave([1], [100], duration=10)
     modulator = synth.sine_wave([1], [0.5], duration=10)*300+1000
 
-    audio = synth.HLPfilter(saw, modulator)
+    audio = synth.HLPfilter(saw, modulator*amount)
     audio = synth.norm(audio)
     modulator = utils.norm(modulator)
 
     return audio, modulator
 
+def triangle_clip(amount=0.5):
+    modulator = (synth.sine_wave([1, 3], [0.2, 1], duration=10)+1)*10
+    triangle = synth.triangle_wave(modulator, [440], duration=10)
+
+    audio = synth.soft_clip(triangle, modulator*amount)
+    audio = synth.norm(audio)
+    modulator = utils.norm(modulator)
+
+    return audio, modulator
 
