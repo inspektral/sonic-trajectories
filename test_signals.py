@@ -27,12 +27,13 @@ def random_sines(ratio:float=0.5):
     for i in range(10):
         random_sines = random_sines + synth.sine_wave(np.random.rand(10), np.random.randint(100, 1000, 10), duration=10)
 
-    sine = synth.sine_wave(np.tile(adsr, 4), [440], duration=10)
+    modulator = np.tile(adsr, 4)
+    sine = synth.sine_wave(modulator, [440], duration=10)
 
-    random_sines = random_sines*ratio + sine
-    random_sines = synth.norm(random_sines)
+    audio = random_sines*ratio + sine
+    audio = synth.norm(audio)
 
-    return random_sines
+    return audio, modulator
 
 def saw_noise(ratio=0.5):
     """
@@ -66,19 +67,23 @@ def saw_noise(ratio=0.5):
 
 def sines_noise(ratio=0.5):
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
-    sines = synth.sine_wave(np.tile(adsr, 4), [np.random.randint(100, 5000)], duration=10)
+    modulator = np.tile(adsr, 4)
+    sines = synth.sine_wave(modulator, [np.random.randint(100, 5000)], duration=10)
     for i in range(10):
-        sines = sines + synth.sine_wave(np.tile(adsr, 4), [np.random.randint(100, 5000)], duration=10)
+        sines = sines + synth.sine_wave(modulator, [np.random.randint(100, 5000)], duration=10)
     noise = synth.noise(duration=10)
-    sines = sines+noise*ratio
-    sines = utils.norm(sines)
-    return sines
+    audio = sines+noise*ratio
+    audio = synth.norm(audio)
+    return audio, modulator
 
 def filter_saw():
     saw = synth.sawtooth_wave([1], [100], duration=10)
     modulator = synth.sine_wave([1], [0.5], duration=10)*300+1000
 
     audio = synth.HLPfilter(saw, modulator)
-    return audio
+    audio = synth.norm(audio)
+    modulator = utils.norm(modulator)
+
+    return audio, modulator
 
 
