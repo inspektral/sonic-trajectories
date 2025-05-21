@@ -252,4 +252,19 @@ def stretch_array(arr:np.ndarray, target_length:int):
     
     return np.interp(new_indices, old_indices, arr)
 
+def norm(x:np.ndarray, min_val:float=-1.0, max_val:float=1.0) -> np.ndarray:
+    """
+    Normalize an array to a specified range.
+
+    Parameters:
+        x (np.ndarray): Input array
+        min_val (float): Minimum value of the output range
+        max_val (float): Maximum value of the output range
+
+    Returns:
+        np.ndarray: Normalized array
+    """
+    x = (x - np.min(x)) / (np.max(x) - np.min(x))
+    return x * (max_val - min_val) + min_val
+
 

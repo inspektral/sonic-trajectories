@@ -63,6 +63,23 @@ def cosine_similarity(repr: np.ndarray) -> np.ndarray:
 def norm(arr):
     return (arr-np.min(arr))/ np.max(arr-np.min(arr))
 
+def stretch_array(arr:np.ndarray, target_length:int):
+
+    """
+    Stretch/compress array to target length using linear interpolation.
+    
+    Parameters:
+    source (np.ndarray): Source array to be stretched/compressed
+    target_length (int): Desired length of output array
+    
+    Returns:
+    np.ndarray: Interpolated array of length target_length
+    """
+    old_indices = np.arange(len(arr))
+    new_indices = np.linspace(0, len(arr) - 1, target_length)
+    
+    return np.interp(new_indices, old_indices, arr)
+
 
 def smoothing(arr:np.ndarray, window_size:int=5):
     """
@@ -75,16 +92,19 @@ def smoothing(arr:np.ndarray, window_size:int=5):
     smoothed_arr = np.convolve(padded_arr, np.ones(window_size)/window_size, mode='valid')
     return smoothed_arr
 
-def plot_with_derivatives(x, dx, ddx, title='Plot', label='label'):
+def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label'):
     plt.figure(figsize=(10, 6))
     plt.subplot(3, 1, 1)
     plt.plot(norm(x), label=title)
+    plt.plot(norm(stretch_array(modulator, len(x))), alpha=0.8, label="modulator")
     plt.legend()
     plt.subplot(3, 1, 2)
     plt.plot(norm(dx), label="first derivative")
+    plt.plot(norm(stretch_array(modulator, len(dx))), alpha=0.8, label="modulator")
     plt.legend()
     plt.subplot(3, 1, 3)
     plt.plot(norm(ddx), label='Second Derivative')
+    plt.plot(norm(stretch_array(modulator, len(ddx))), alpha=0.8, label="modulator")
     plt.legend()
     plt.suptitle(title)
     plt.tight_layout()

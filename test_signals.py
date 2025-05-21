@@ -30,7 +30,7 @@ def random_sines(ratio:float=0.5):
     sine = synth.sine_wave(np.tile(adsr, 4), [440], duration=10)
 
     random_sines = random_sines*ratio + sine
-    random_sines = utils.norm(random_sines)
+    random_sines = synth.norm(random_sines)
 
     return random_sines
 
@@ -56,11 +56,13 @@ def saw_noise(ratio=0.5):
     """
 
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
-    saw = synth.sawtooth_wave(np.tile(adsr, 4), [50], duration=10)
+    modulator = np.tile(adsr, 4)
+    saw = synth.sawtooth_wave(modulator, [50], duration=10)
 
     noise = synth.noise(duration=10)
+    audio = synth.norm(saw+noise*ratio)
 
-    return saw+noise*ratio
+    return audio, modulator
 
 def sines_noise(ratio=0.5):
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
