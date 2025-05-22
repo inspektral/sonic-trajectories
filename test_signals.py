@@ -3,25 +3,6 @@ import synth
 import utils
 
 def random_sines(ratio:float=0.5):
-    """
-    Generate test signal mixing random sine waves with reference tone.
-    
-    Generates complex signal by:
-    1. Summing 10 random sine waves with random frequencies (100-1000 Hz)
-    2. Adding reference 440 Hz sine wave with ADSR envelope
-    3. Mixing signals according to ratio parameter
-    4. Normalizing output
-    
-    Parameters:
-        ratio (float): Mix ratio between random sines (ratio) and reference tone (1-ratio). 
-                      Default 0.5 for equal mix.
-    
-    Returns:
-        np.ndarray: Normalized audio signal of 10 seconds duration
-    
-    Example:
-        >>> signal = random_sines(ratio=0.7)  # 70% random, 30% reference
-    """
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 20)
     random_sines = synth.sine_wave(np.random.rand(10), np.random.randint(100, 1000, 10), duration=10)
     for i in range(10):
@@ -36,26 +17,6 @@ def random_sines(ratio:float=0.5):
     return audio, modulator
 
 def saw_noise(ratio=0.5):
-    """
-    Generate test signal mixing sawtooth wave with noise.
-
-    Generates complex signal by:
-    1. Generating sawtooth wave with ADSR envelope
-    2. Generating white noise
-    3. Mixing signals according to ratio parameter
-    4. Normalizing output
-
-    Parameters:
-        ratio (float): Mix ratio between sawtooth wave (ratio) and noise (1-ratio). 
-                      Default 0.5 for equal mix.
-
-    Returns:
-        np.ndarray: Normalized audio signal of 10 seconds duration
-
-    Example:
-        >>> signal = saw_noise(ratio=0.7)  # 70% sawtooth, 30% noise
-    """
-
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
     modulator = np.tile(adsr, 4)
     saw = synth.sawtooth_wave(modulator, [50], duration=10)
@@ -124,3 +85,15 @@ def reverb_saw(amount=0.5):
     audio = synth.norm(reverb)
     return audio, modulator
 
+def saw_vibrato(amount=0.1):
+    modulator = synth.sine_wave([1], [0.2, 1], duration=10)
+    saw = synth.sawtooth_wave([1], modulator*amount*220+220, duration=10)
+    audio = synth.norm(saw)
+    return audio, modulator
+
+def fm_test(amount=0.5):
+    modulator = utils.norm(synth.sine_wave([1], [0.2, 1], duration=10))
+    fm_mod = synth.triangle_wave([1], [600], duration=10)
+    audio = synth.triangle_wave([1], fm_mod*amount*modulator*440+440, duration=10)
+    audio = synth.norm(audio)
+    return audio, modulator
