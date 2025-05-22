@@ -96,3 +96,19 @@ def triangle_clip(amount=0.5):
 
     return audio, modulator
 
+def delay_noise(amount=0.5):
+    noise = synth.noise(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), duration=10)
+    modulator = utils.norm(synth.sine_wave([1], [0.2], duration=10))
+    delay = synth.delay(noise, wet=modulator*amount)
+    audio = synth.norm(delay)
+    return audio, modulator
+
+
+def delay_saw(amount=0.5):
+    noise = synth.sawtooth_wave(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), [220], duration=10)
+    modulator = utils.norm(synth.sine_wave([1], [0.2], duration=10))
+    delay = synth.delay(noise, wet=modulator*amount)
+    audio = synth.norm(delay)
+    return audio, modulator
+
+
