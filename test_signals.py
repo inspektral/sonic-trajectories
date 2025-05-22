@@ -103,12 +103,24 @@ def delay_noise(amount=0.5):
     audio = synth.norm(delay)
     return audio, modulator
 
-
 def delay_saw(amount=0.5):
-    noise = synth.sawtooth_wave(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), [220], duration=10)
+    saw = synth.sawtooth_wave(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), [220], duration=10)
     modulator = utils.norm(synth.sine_wave([1], [0.2], duration=10))
-    delay = synth.delay(noise, wet=modulator*amount)
+    delay = synth.delay(saw, wet=modulator*amount)
     audio = synth.norm(delay)
     return audio, modulator
 
+def reverb_noise(amount=0.5):
+    noise = synth.noise(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), duration=10)
+    modulator = utils.norm(synth.sine_wave([1], [0.2], duration=10))*amount
+    reverb = synth.reverb(noise, wet=modulator)
+    audio = synth.norm(reverb)
+    return audio, modulator
+
+def reverb_saw(amount=0.5):
+    saw = synth.sawtooth_wave(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), [220], duration=10)
+    modulator = utils.norm(synth.sine_wave([1], [0.2], duration=10))*amount
+    reverb = synth.reverb(saw, wet=modulator)
+    audio = synth.norm(reverb)
+    return audio, modulator
 

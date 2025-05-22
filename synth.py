@@ -195,12 +195,14 @@ def reverb(audio, wet:np.ndarray=[1], decay= 1.5):
     wet = stretch_array(wet, len(audio))
 
     ir = noise(np.logspace(1,0,300)/10, decay)
-    ir = HLPfilter(ir, 2000)
+    ir = HLPfilter(ir, [2000])
     x = np.convolve(audio, ir, mode='full')
     x = x[:len(audio)]
 
-    x = x * wet
-    x = x + audio * (1 - wet)
+    x = norm(x)
+    audio = norm(audio)
+
+    x = x*wet + audio * (1 - wet)
 
     return x
 
