@@ -48,7 +48,7 @@ def filter_saw(amount=0.5):
     return audio, modulator
 
 def triangle_clip(amount=0.5):
-    modulator = (synth.sine_wave([1, 3], [0.2, 1], duration=10)+1)*10
+    modulator = (synth.sine_wave([.5, 1.5], [0.2, 1], duration=10)+1)*10
     triangle = synth.triangle_wave(modulator, [440], duration=10)
 
     audio = synth.soft_clip(triangle, modulator*amount)

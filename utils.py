@@ -92,23 +92,32 @@ def smoothing(arr:np.ndarray, window_size:int=5):
     smoothed_arr = np.convolve(padded_arr, np.ones(window_size)/window_size, mode='valid')
     return smoothed_arr
 
+def window(length:int):
+    window = np.zeros(length)
+    window[1:-1] = 0.5
+    window[2:-2] = 1
+
+    return window
+
 def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label'):
     plt.figure(figsize=(10, 6))
     plt.subplot(3, 1, 1)
-    plt.plot(norm(x), label=title)
-    plt.plot(norm(stretch_array(modulator, len(x))), alpha=0.8, label="modulator")
-    plt.legend()
+    single_plot(x, modulator, label=label)
+    
     plt.subplot(3, 1, 2)
-    plt.plot(norm(dx), label="first derivative")
-    plt.plot(norm(stretch_array(modulator, len(dx))), alpha=0.8, label="modulator")
-    plt.legend()
+    single_plot(dx, modulator, label='First Derivative')
+
     plt.subplot(3, 1, 3)
-    plt.plot(norm(ddx), label='Second Derivative')
-    plt.plot(norm(stretch_array(modulator, len(ddx))), alpha=0.8, label="modulator")
-    plt.legend()
+    single_plot(ddx, modulator, label='Second Derivative')
+
     plt.suptitle(title)
     plt.tight_layout()
     plt.show()
+
+def single_plot(x, modulator, label='label'):
+    plt.plot(norm(x)*window(len(x)), label=label)
+    plt.plot(norm(stretch_array(modulator, len(x)))*window(len(x)), alpha=0.8, label="modulator")
+    plt.legend()
 
 def plot_heatmap(arr, title='Heatmap'):
     plt.figure(figsize=(10, 6))
