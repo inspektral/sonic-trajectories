@@ -134,6 +134,39 @@ def adsr(attack:float, decay:float, sustain:float, release:float, exp:float=1.0,
     
     return envelope
 
+def ahd(attack:float, hold:float, decay:float, exp:float=1.0, sr=44100):
+    """
+    Generate an AHD envelope.
+
+    Parameters:
+        attack (float): Attack time in seconds.
+        hold (float): Hold time in seconds.
+        decay (float): Decay time in seconds.
+        exp (float): Exponential curve factor.
+        duration (float): Duration of the envelope in seconds.
+
+    Returns:
+        np.ndarray: Array of AHD envelope samples.
+    """
+    attack_samples = int(sr * attack)
+    hold_samples = int(sr * hold)
+    decay_samples = int(sr * decay)
+    num_samples = attack_samples + hold_samples + decay_samples
+
+    envelope = np.zeros(num_samples)
+
+    if attack_samples > 0:
+        envelope[:attack_samples] = np.linspace(0, 1, attack_samples) ** exp
+
+    if hold_samples > 0:
+        envelope[attack_samples:attack_samples + hold_samples] = 1
+
+    if decay_samples > 0:
+        envelope[attack_samples + hold_samples:attack_samples + hold_samples + decay_samples] = \
+            1 - np.linspace(0, 1, decay_samples) ** exp
+
+    return envelope
+
 def HLPfilter(audio:np.ndarray, cutoff_cv:np.ndarray, highpass=False, sr=44100) -> np.ndarray:
     """
     Filter audio using a 12 dB/oct (first-order) IIR filter with a modulated cutoff.

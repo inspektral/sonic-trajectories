@@ -2,19 +2,30 @@ import numpy as np
 import synth
 import utils
 
-def random_sines(ratio:float=0.5):
-    adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 20)
-    random_sines = synth.sine_wave(np.random.rand(10), np.random.randint(100, 1000, 10), duration=10)
-    for i in range(10):
-        random_sines = random_sines + synth.sine_wave(np.random.rand(10), np.random.randint(100, 1000, 10), duration=10)
+# Amplitude
 
-    modulator = np.tile(adsr, 4)
-    sine = synth.sine_wave(modulator, [440], duration=10)
-
-    audio = random_sines*ratio + sine
-    audio = synth.norm(audio)
-
+def square_slow(amount=0.5):
+    modulator = np.tile(synth.ahd(1, 0, 1), 4)               
+    square = synth.square_wave(modulator, [440], duration=10)
+    audio = synth.norm(square)
     return audio, modulator
+
+def square_fast(amount=0.5):
+    modulator = np.tile(synth.adsr(0.01, 0.05, 0, 0, 10, 1), 20)
+    square = synth.square_wave(modulator, [440], duration=10)
+    audio = synth.norm(square)
+    return audio, modulator
+
+
+# Pitch
+
+def saw_vibrato(amount=0.1):
+    modulator = synth.sine_wave([1], [0.2, 1], duration=10)
+    saw = synth.square_wave([1], modulator*amount*220+220, duration=10)
+    audio = synth.norm(saw)
+    return audio, modulator
+
+# Noise
 
 def saw_noise(ratio=0.5):
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
@@ -23,7 +34,6 @@ def saw_noise(ratio=0.5):
 
     noise = synth.noise(duration=10)
     audio = synth.norm(saw+noise*ratio)
-
     return audio, modulator
 
 def sines_noise(ratio=0.5):
@@ -36,6 +46,8 @@ def sines_noise(ratio=0.5):
     audio = sines+noise*ratio
     audio = synth.norm(audio)
     return audio, modulator
+
+# Frequency content
 
 def filter_saw(amount=0.5):
     saw = synth.sawtooth_wave([1], [100], duration=10)
@@ -56,6 +68,22 @@ def triangle_clip(amount=0.5):
     modulator = utils.norm(modulator)
 
     return audio, modulator
+
+def fm_amplitude(amount=0.5):
+    modulator = utils.norm(synth.sine_wave([1], [0.2, 1], duration=10))
+    fm_mod = synth.triangle_wave([1], [600], duration=10)
+    audio = synth.triangle_wave([1], fm_mod*amount*modulator*440+440, duration=10)
+    audio = synth.norm(audio)
+    return audio, modulator
+
+def fm_frequency(amount=0.5):
+    modulator = utils.norm(synth.sine_wave([1], [0.2, 1], duration=10))
+    fm_mod = synth.triangle_wave([1], 400+200*modulator, duration=10)
+    audio = synth.triangle_wave([1], fm_mod*amount*440+440, duration=10)
+    audio = synth.norm(audio)
+    return audio, modulator
+
+# Delay and reverb
 
 def delay_noise(amount=0.5):
     noise = synth.noise(np.tile(synth.adsr(0.01, 0.2, 0,0, 10, 1), 20), duration=10)
@@ -85,15 +113,3 @@ def reverb_saw(amount=0.5):
     audio = synth.norm(reverb)
     return audio, modulator
 
-def saw_vibrato(amount=0.1):
-    modulator = synth.sine_wave([1], [0.2, 1], duration=10)
-    saw = synth.sawtooth_wave([1], modulator*amount*220+220, duration=10)
-    audio = synth.norm(saw)
-    return audio, modulator
-
-def fm_test(amount=0.5):
-    modulator = utils.norm(synth.sine_wave([1], [0.2, 1], duration=10))
-    fm_mod = synth.triangle_wave([1], [600], duration=10)
-    audio = synth.triangle_wave([1], fm_mod*amount*modulator*440+440, duration=10)
-    audio = synth.norm(audio)
-    return audio, modulator
