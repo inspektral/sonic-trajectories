@@ -99,8 +99,11 @@ def window(length:int):
 
     return window
 
-def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label'):
-    plt.figure(figsize=(10, 6))
+def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label', small=False):
+    if small:
+        plt.figure(figsize=(6, 4))
+    else:
+        plt.figure(figsize=(10, 6))
     plt.subplot(3, 1, 1)
     single_plot(x, modulator, label=label)
     
@@ -119,10 +122,23 @@ def single_plot(x, modulator, label='label'):
     plt.plot(norm(stretch_array(modulator, len(x)))*window(len(x)), alpha=0.8, label="modulator")
     plt.legend()
 
-def plot_heatmap(arr, title='Heatmap'):
-    plt.figure(figsize=(10, 6))
+def plot_heatmap(arr, title='Heatmap', small=False):
+    if small:
+        plt.figure(figsize=(6, 4))
+    else:
+        plt.figure(figsize=(10, 6))
+
     ax = sns.heatmap(arr, cmap='viridis')
     ax.invert_yaxis()
     plt.title(title)
     plt.tight_layout()
     plt.show()
+
+# representations
+
+def get_cqt(audio, sr):
+    spectrum = librosa.amplitude_to_db(np.abs(librosa.cqt(audio, sr=sr)), ref=np.max)
+    return spectrum
+
+    
+    

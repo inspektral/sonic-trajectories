@@ -19,15 +19,15 @@ def square_fast(amount=0.5):
 
 # Pitch
 
-def saw_vibrato(amount=0.1):
+def square_vibrato(amount=0.1):
     modulator = synth.sine_wave([1], [0.2, 1], duration=10)
-    saw = synth.square_wave([1], modulator*amount*220+220, duration=10)
+    saw = synth.square_wave([1], modulator*amount*220+440, duration=10)
     audio = synth.norm(saw)
     return audio, modulator
 
 # Noise
 
-def saw_noise(ratio=0.5):
+def saw_noise(ratio=1):
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
     modulator = np.tile(adsr, 4)
     saw = synth.sawtooth_wave(modulator, [50], duration=10)
@@ -36,7 +36,7 @@ def saw_noise(ratio=0.5):
     audio = synth.norm(saw+noise*ratio)
     return audio, modulator
 
-def sines_noise(ratio=0.5):
+def sines_noise(ratio=1):
     adsr = synth.adsr(0.1, 0.5, 0.0, 0.2, 1)
     modulator = np.tile(adsr, 4)
     sines = synth.sine_wave(modulator, [np.random.randint(100, 5000)], duration=10)
