@@ -4,6 +4,16 @@ import librosa
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# music2latent
+from music2latent.music2latent.inference import EncoderDecoder
+
+# DAC
+from audiotools import AudioSignal
+import torch
+import dacsound
+import dac
+
+
 def add_padding(audio_array, sr=44100):
     """
     Add padding to the audio array to make it a multiple of the sample rate.
@@ -104,14 +114,24 @@ def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label', s
         plt.figure(figsize=(6, 4))
     else:
         plt.figure(figsize=(10, 6))
+    
     plt.subplot(3, 1, 1)
-    single_plot(x, modulator, label=label)
+    if isinstance(x, list):
+        multiplot(x, modulator, label=label)
+    else:
+        single_plot(x, modulator, label=label)
     
     plt.subplot(3, 1, 2)
-    single_plot(dx, modulator, label='First Derivative')
+    if isinstance(dx, list):
+        multiplot(dx, modulator, label='First Derivative')
+    else:
+        single_plot(dx, modulator, label='First Derivative')
 
     plt.subplot(3, 1, 3)
-    single_plot(ddx, modulator, label='Second Derivative')
+    if isinstance(ddx, list):
+        multiplot(ddx, modulator, label='Second Derivative')
+    else:
+        single_plot(ddx, modulator, label='Second Derivative')
 
     plt.suptitle(title)
     plt.tight_layout()
@@ -121,6 +141,16 @@ def single_plot(x, modulator, label='label'):
     plt.plot(norm(x)*window(len(x)), label=label)
     plt.plot(norm(stretch_array(modulator, len(x)))*window(len(x)), alpha=0.8, label="modulator")
     plt.legend()
+
+def multiplot(x_list, modulator, label):
+    max_length = max([x.size for x in x_list])
+    for i, x in enumerate(x_list):
+        print(f"Plotting {label} {i+1} with length {len(x)}")
+        x = stretch_array(x, max_length)
+        plt.plot(norm(x)*window(len(x)), label=f'{label} {i+1}')
+    plt.plot(norm(stretch_array(modulator, max_length))*window(max_length), alpha=0.8, label="modulator")
+    plt.legend()
+
 
 def plot_heatmap(arr, title='Heatmap', small=False):
     if small:
@@ -136,9 +166,66 @@ def plot_heatmap(arr, title='Heatmap', small=False):
 
 # representations
 
-def get_cqt(audio, sr):
+
+def get_mfcc(audio, sr=44100):
+    mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=20)
+    return mfcc
+
+def get_cqt(audio, sr=44100):
     spectrum = librosa.amplitude_to_db(np.abs(librosa.cqt(audio, sr=sr)), ref=np.max)
     return spectrum
 
+def get_spectrum(audio, sr=44100):
+    spectrum = librosa.amplitude_to_db(np.abs(librosa.stft(audio, n_fft=4096)), ref=np.max)
+    return spectrum
+
+
+def get_music2latent(audio, hop_size=1024):
+    encdec = EncoderDecoder()
+
+    all_latent_windows = []
+
+    for i in range(int(4096/hop_size)):
+        to_encode = audio[int(i*hop_size):]
+
+        latent = encdec.encode(to_encode)
+        latent = latent.cpu().numpy()[0,:,:]
+        all_latent_windows.append(latent)
+
+    min_length = min([l.shape[1] for l in all_latent_windows])
+    all_latent_windows = [l[:,:min_length] for l in all_latent_windows]
+
+    latent = np.stack(all_latent_windows, axis=2).reshape(all_latent_windows[0].shape[0], -1)
+
+    return latent
+
+def get_dac(audio, sr=44100):
+    device = torch.device('cpu') # or 'cuda'
+
+    model_path = dac.utils.download(model_type="44khz")
+    model = dac.DAC.load(model_path)
+    model.to(device);
+    model.eval();
+
+    dac_audio = dacsound.DACSound(model, audio, sr)
+    latents = dac_audio.latents.cpu().numpy()[0,:,:]
+
+    return latents
+
+
+representations = {
+    'mfcc': get_mfcc,
+    'cqt': get_cqt,
+    'spectrum': get_spectrum,
+    'music2latent': get_music2latent,
+    'dac': get_dac
+}
+
+def get_representations(audio, sr=44100):
+
+    reprs = {}
+    for name, func in representations.items():
+        print(f"Computing {name} representation...")
+        reprs[name] = func(audio)
     
-    
+    return reprs
