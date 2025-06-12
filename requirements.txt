@@ -2,6 +2,5 @@ numpy
 librosa
 matplotlib
 seaborn
-music2latent
 descript-audiotools>=0.7.2
 descript-audio-codec
