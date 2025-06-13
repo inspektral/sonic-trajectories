@@ -116,19 +116,19 @@ def plot_with_derivatives(x, dx, ddx, modulator,  title='Plot', label='label', s
         plt.figure(figsize=(10, 6))
     
     plt.subplot(3, 1, 1)
-    if isinstance(x, list):
+    if isinstance(x, dict):
         multiplot(x, modulator, label=label)
     else:
         single_plot(x, modulator, label=label)
     
     plt.subplot(3, 1, 2)
-    if isinstance(dx, list):
+    if isinstance(dx, dict):
         multiplot(dx, modulator, label='First Derivative')
     else:
         single_plot(dx, modulator, label='First Derivative')
 
     plt.subplot(3, 1, 3)
-    if isinstance(ddx, list):
+    if isinstance(ddx, dict):
         multiplot(ddx, modulator, label='Second Derivative')
     else:
         single_plot(ddx, modulator, label='Second Derivative')
@@ -142,12 +142,11 @@ def single_plot(x, modulator, label='label'):
     plt.plot(norm(stretch_array(modulator, len(x)))*window(len(x)), alpha=0.8, label="modulator")
     plt.legend()
 
-def multiplot(x_list, modulator, label):
-    max_length = max([x.size for x in x_list])
-    for i, x in enumerate(x_list):
-        print(f"Plotting {label} {i+1} with length {len(x)}")
-        x = stretch_array(x, max_length)
-        plt.plot(norm(x)*window(len(x)), label=f'{label} {i+1}')
+def multiplot(x_dict, modulator, label):
+    max_length = max([len(x) for x in x_dict.values()])
+    for key in x_dict:
+        x = stretch_array(x_dict[key], max_length)
+        plt.plot(norm(x)*window(len(x)), label=f'{label} {key}')
     plt.plot(norm(stretch_array(modulator, max_length))*window(max_length), alpha=0.8, label="modulator")
     plt.legend()
 
@@ -229,3 +228,16 @@ def get_representations(audio, sr=44100):
         reprs[name] = func(audio)
     
     return reprs
+
+def calculate_metric(representations, func, parameters=None):
+    metrics = {}
+    d_metrics = {}
+    dd_metrics = {}
+    for key in representations.keys():
+        metric = func(representations[key], **(parameters or {}))
+        metrics[key] = metric
+        d_metric = np.diff(metric)
+        d_metrics[key] = d_metric
+        dd_metric = np.diff(d_metric)
+        dd_metrics[key] = dd_metric
+    return metrics, d_metrics, dd_metrics
