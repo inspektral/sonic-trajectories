@@ -31,7 +31,6 @@ def spectrogram(audio, sr=44100, title='Spectrogram'):
 
 def distances(repr:np.ndarray, top_n:int=0):
     distances = np.power(repr[:, 1:] - repr[:, :-1], 2)
-    print(f"distances shape: {distances.shape}")
 
     if top_n > 0:
         spans = np.max(distances, axis=1) - np.min(distances, axis=1)
@@ -146,6 +145,7 @@ def multiplot(x_dict, modulator, label):
     max_length = max([len(x) for x in x_dict.values()])
     for key in x_dict:
         x = stretch_array(x_dict[key], max_length)
+        x = x[10:-10]
         plt.plot(norm(x)*window(len(x)), label=f'{label} {key}')
     plt.plot(norm(stretch_array(modulator, max_length))*window(max_length), alpha=0.8, label="modulator")
     plt.legend()
