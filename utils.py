@@ -13,6 +13,13 @@ import torch
 import dacsound
 import dac
 
+# CORRELATION
+from scipy.signal import correlate, correlation_lags
+
+# OPTIMIZATIONS
+import scipy.signal
+
+
 
 def add_padding(audio_array, sr=44100):
     """
@@ -241,3 +248,45 @@ def calculate_metric(representations, func, parameters=None):
         dd_metric = np.diff(d_metric)
         dd_metrics[key] = dd_metric
     return metrics, d_metrics, dd_metrics
+
+# CORRELATION
+
+def get_correlations(repr:dict, modulator:np.ndarray) -> dict:
+    correlations = {}
+    for key in repr.keys():
+        x = repr[key]
+        correlations[key] = calc_correlation(modulator, x)
+    return correlations
+
+def calc_correlation(modulator, x):
+    x = stretch_array(x, len(modulator))
+
+    y = modulator[10:-10]
+    y = norm(y)
+
+    x = x[10:-10]
+    x = norm(x)
+    
+    return np.corrcoef(x, y)[0, 1]
+
+import numpy as np
+
+# smooth
+
+def smooth(sig: np.ndarray, smoothing: float | int) -> np.ndarray:
+    window_size = max(1, int(round(smoothing)))
+    
+    window = np.ones(window_size) / window_size
+
+    pad_width = window_size // 2
+    padded_sig = np.pad(sig, pad_width, mode='edge')
+    
+    smoothed = scipy.signal.fftconvolve(padded_sig, window, mode='valid')
+
+    # Ensure the output length matches the input length
+    if len(smoothed) < len(sig):
+        smoothed = np.pad(smoothed, (0, len(sig) - len(smoothed)), mode='edge')
+    elif len(smoothed) > len(sig):
+        smoothed = smoothed[:len(sig)]
+    
+    return smoothed
