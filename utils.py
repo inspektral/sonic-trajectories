@@ -18,6 +18,11 @@ from scipy.signal import correlate, correlation_lags
 
 # OPTIMIZATIONS
 import scipy.signal
+from skopt import gp_minimize
+from skopt.space import Integer
+from scipy.optimize import minimize
+
+
 
 
 
@@ -28,53 +33,6 @@ def add_padding(audio_array, sr=44100):
     audio_padded = np.zeros((audio_array.size+sr))
     audio_padded[int(sr/2):int(sr/2)+audio_array.size] = audio_array
     return  audio_padded
-
-def spectrogram(audio, sr=44100, title='Spectrogram'):
-    
-    librosa.display.specshow(librosa.amplitude_to_db(np.abs(librosa.stft(audio, n_fft=8192)), ref=np.max), y_axis='log', x_axis='time', sr=sr)
-    plt.colorbar(format='%+2.0f dB')
-    plt.title(title)
-    plt.show()
-
-def distances(repr:np.ndarray, top_n:int=0):
-    distances = np.power(repr[:, 1:] - repr[:, :-1], 2)
-
-    if top_n > 0:
-        spans = np.max(distances, axis=1) - np.min(distances, axis=1)
-        max_indices = np.argsort(spans)[-top_n:]
-        print(f"max_indices: {max_indices}")
-        distances = distances[max_indices, :]
-    
-    distances = np.sum(distances, axis=0)
-    distances = np.sqrt(distances)
-    return distances
-
-def cosine_similarity(repr: np.ndarray) -> np.ndarray:
-    """
-    Compute cosine similarity between consecutive columns.
-    
-    Parameters:
-        repr (np.ndarray): Feature matrix of shape (num_features, num_frames)
-    
-    Returns:
-        np.ndarray: Array of cosine similarities between consecutive frames
-    """
-    # Get consecutive column pairs
-    a = repr[:, 1:]  # all columns except first
-    b = repr[:, :-1] # all columns except last
-    
-    # Compute dot products for all pairs
-    dot_products = np.sum(a * b, axis=0)
-    
-    # Compute norms for all columns
-    norms_a = np.linalg.norm(a, axis=0)
-    norms_b = np.linalg.norm(b, axis=0)
-    
-    # Avoid division by zero with small epsilon
-    eps = 1e-8
-    similarities = dot_products / (norms_a * norms_b + eps)
-    
-    return similarities
 
 def norm(arr):
     return (arr-np.min(arr))/ np.max(arr-np.min(arr))
@@ -95,6 +53,11 @@ def stretch_array(arr:np.ndarray, target_length:int):
     new_indices = np.linspace(0, len(arr) - 1, target_length)
     
     return np.interp(new_indices, old_indices, arr)
+
+def norm_stretch(arr, length):
+    arr = norm(arr)
+    arr = stretch_array(arr, length)
+    return arr
 
 
 def smoothing(arr:np.ndarray, window_size:int=5):
@@ -170,8 +133,63 @@ def plot_heatmap(arr, title='Heatmap', small=False):
     plt.tight_layout()
     plt.show()
 
-# representations
+# metrics
 
+def magnitude(repr:np.ndarray):
+    return np.linalg.norm(repr, axis=0)
+
+def distances(repr:np.ndarray, top_n:int=0):
+    distances = np.power(repr[:, 1:] - repr[:, :-1], 2)
+
+    if top_n > 0:
+        spans = np.max(distances, axis=1) - np.min(distances, axis=1)
+        max_indices = np.argsort(spans)[-top_n:]
+        print(f"max_indices: {max_indices}")
+        distances = distances[max_indices, :]
+    
+    distances = np.sum(distances, axis=0)
+    distances = np.sqrt(distances)
+    return distances
+
+def cosine_similarity(repr: np.ndarray) -> np.ndarray:
+    a = repr[:, 1:]  # all columns except first
+    b = repr[:, :-1] # all columns except last
+    
+    dot_products = np.sum(a * b, axis=0)
+    
+    norms_a = np.linalg.norm(a, axis=0)
+    norms_b = np.linalg.norm(b, axis=0)
+    
+    eps = 1e-8
+    similarities = dot_products / (norms_a * norms_b + eps)
+    
+    return similarities
+
+def calc_metric(repr: np.ndarray, metric:str):
+    """
+    Calculate the specified metric for the given representation.
+    
+    Parameters:
+    repr (np.ndarray): The representation array.
+    metric (str): The metric to calculate ('magnitude', 'distances', 'cosine_similarity').
+    
+    Returns:
+    np.ndarray: The calculated metric.
+    """
+    metrics = {
+        'magnitude': magnitude,
+        'distances': distances,
+        'cosine_similarity': cosine_similarity
+    }
+
+    if metric not in metrics:
+        raise ValueError(f"Unknown metric: {metric}. Available metrics: {list(metrics.keys())}")
+    
+    return metrics[metric](repr)
+
+get_available_metrics = lambda: ['magnitude', 'distances', 'cosine_similarity']
+
+# representations
 
 def get_mfcc(audio, sr=44100):
     mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=20)
@@ -186,14 +204,13 @@ def get_spectrum(audio, sr=44100):
     return spectrum
 
 
-def get_music2latent(audio, hop_size=1024):
+def get_music2latent(audio, hop_size=1024, sr=44100):
     encdec = EncoderDecoder()
-
     all_latent_windows = []
+
 
     for i in range(int(4096/hop_size)):
         to_encode = audio[int(i*hop_size):]
-
         latent = encdec.encode(to_encode)
         latent = latent.cpu().numpy()[0,:,:]
         all_latent_windows.append(latent)
@@ -235,6 +252,35 @@ def get_representations(audio, sr=44100):
         reprs[name] = func(audio)
     
     return reprs
+
+def calc_representation(audio:np.ndarray, repr:str, sr=44100):
+    """
+    Calculate the specified representation for the given audio.
+    
+    Parameters:
+    audio (np.ndarray): The audio signal.
+    repr (str): The representation to calculate ('mfcc', 'cqt', 'spectrum', 'music2latent', 'dac').
+    sr (int): Sample rate of the audio signal.
+    
+    Returns:
+    np.ndarray: The calculated representation.
+    """
+    representations = {
+        'mfcc': get_mfcc,
+        'cqt': get_cqt,
+        'spectrum': get_spectrum,
+        'music2latent': get_music2latent,
+        'dac': get_dac
+    }
+
+    if repr not in representations:
+        raise ValueError(f"Unknown representation: {repr}. Available representations: {list(representations.keys())}")
+    
+    return representations[repr](audio, sr=sr)
+
+get_available_representations = lambda: list(representations.keys())
+
+# Batch metrics calculation
 
 def calculate_metric(representations, func, parameters=None):
     metrics = {}
@@ -290,3 +336,31 @@ def smooth(sig: np.ndarray, smoothing: float | int) -> np.ndarray:
         smoothed = smoothed[:len(sig)]
     
     return smoothed
+
+# Optimizations
+
+def calc_best_smoothing(sig, modulator):
+    
+    def smooth_objective(smoothing_factor):
+        smoothed = smooth(sig, smoothing_factor[0])
+        correlation = np.abs(np.corrcoef(smoothed, modulator)[0, 1])
+        return -correlation  # Minimize negative = maximize positive
+    
+    result = gp_minimize(smooth_objective, 
+                        dimensions=[Integer(1, 5000)],
+                        n_calls=50,  # Only 50 evaluations!
+                        random_state=42)
+    
+    return result.x[0]
+
+
+def calc_best_exponent(sig, modulator):
+
+    def exponent_objective(exponent):
+        transformed = norm(sig ** exponent[0])
+        correlation = np.abs(np.corrcoef(transformed, modulator)[0, 1])
+        return -correlation
+
+    result = minimize(exponent_objective, x0=[1.0], bounds=[(0.001, 10)])
+    best_exponent = result.x[0]
+    return best_exponent
