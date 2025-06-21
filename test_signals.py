@@ -152,3 +152,24 @@ def reverb_saw(amount=0.5):
     audio = synth.norm(reverb)
     return audio, modulator
 
+
+
+def get_tests():
+    """
+    Returns a list of test functions and their names.
+    """
+    return {
+        "square_slow": square_slow,
+        "square_fast": square_fast,
+        "square_vibrato": square_vibrato,
+        "saw_noise": saw_noise,
+        "sines_noise": sines_noise,
+        "filter_saw": filter_saw,
+        "triangle_clip": triangle_clip,
+        "fm_amplitude": fm_amplitude,
+        "fm_frequency": fm_frequency,
+        "delay_noise": delay_noise,
+        "delay_saw": delay_saw,
+        "reverb_noise": reverb_noise,
+        "reverb_saw": reverb_saw
+    }
