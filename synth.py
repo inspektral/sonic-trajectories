@@ -303,3 +303,19 @@ def norm(x:np.ndarray, min_val:float=-1.0, max_val:float=1.0) -> np.ndarray:
     return x * (max_val - min_val) + min_val
 
 
+class synth_sound:
+
+    def __init__(self, sr=44100, duration=10, pitch=440):
+        self.sr = sr
+        self.duration = duration
+        self.pitch = pitch
+        self.modulations = {}
+
+    def add_modulation(self, target:str, amount:float ,value:np.ndarray):
+        self.modulations[target] = {
+            'amount': amount,
+            'value': value
+        }
+
+    def render(self):
+        pass

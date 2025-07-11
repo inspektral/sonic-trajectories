@@ -96,7 +96,7 @@ def sines_noise(ratio=1, no_mod=False):
 
 # Frequency content
 
-def filter_saw(amount=0.5, no_mod=False):
+def filter_saw(amount=1, no_mod=False):
     """
     Filtered saw: stable 100hz saw with 12db/oct lowpass filter with cutoff frequency between 700hz and 1300hz, modulated by 1hz sine wave
     """
@@ -150,12 +150,12 @@ def fm_amplitude(amount=0.5, no_mod=False):
     
     return audio, modulator
 
-def fm_frequency(amount=0.5, no_mod=False):
+def fm_frequency(amount=0.5, fm_base = 400, no_mod=False):
     """
     FM triangle (modulator frequency): stable 440hz triangle wave with modulated by 400-600hz (modulated by a sine wave that starts at 0.2hz and ends at 1hz) triangle wave with amplitude 0.5.
     """
     modulator = utils.norm(synth.sine_wave([1], [0.2, 1], duration=10))
-    fm_mod = synth.triangle_wave([1], 400+200*modulator, duration=10)
+    fm_mod = synth.triangle_wave([1], fm_base+200*modulator, duration=10)
     audio = synth.triangle_wave([1], fm_mod*amount*440+440, duration=10)
     audio = synth.norm(audio)
     if no_mod:
@@ -165,6 +165,7 @@ def fm_frequency(amount=0.5, no_mod=False):
         return audio, modulator, audio_no_mod
 
     return audio, modulator
+
 
 # Delay and reverb
 
