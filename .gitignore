@@ -177,3 +177,8 @@ cython_debug/
 # other
 weights/
 music2latent/
+
+*.csv
+*.h5
+*.parquet
+*.json
