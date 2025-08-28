@@ -182,3 +182,5 @@ music2latent/
 *.h5
 *.parquet
 *.json
+*.png 
+*.tex
